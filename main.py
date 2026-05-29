@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
 """
-Entry point for the AI-Assisted API Test Generation & Execution Framework.
-Run this file to execute all tests and generate HTML + Excel reports.
+Run all generated tests and produce HTML + Excel reports.
 
     python main.py
 
-Or use pytest directly for more control:
-
-    pytest tests/ -v
-    pytest tests/test_reqres.py -v
-    pytest tests/ -k TC005
+To generate new test cases first:
+    python generate_tests.py --api_name NAME --base_url URL --endpoint PATH --demo
 """
 import os
 import subprocess
@@ -19,13 +15,30 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
 def main() -> int:
-    banner = "  AI-Assisted API Test Generation & Execution Framework  "
+    from test_cases.test_case_definitions import TEST_CASES
+
+    banner = "  AI-API-Test-Generation-Framework  "
     print("\n" + "=" * len(banner))
     print(banner)
     print("=" * len(banner))
-    print(f"\n  Running tests from: {ROOT}")
-    print(f"  APIs under test  : JSONPlaceholder, PokeAPI, DummyJSON")
-    print(f"  Total test cases : 14  (7 positive + 7 negative)\n")
+
+    if not TEST_CASES:
+        print("\n  No test cases yet.")
+        print("  Generate some first:\n")
+        print("  python generate_tests.py \\")
+        print('    --api_name "DummyJSON" \\')
+        print('    --base_url "https://dummyjson.com" \\')
+        print('    --endpoint "/products/1" \\')
+        print("    --demo\n")
+        return 0
+
+    total = len(TEST_CASES)
+    positive = sum(1 for tc in TEST_CASES if tc["test_type"] == "positive")
+    negative = total - positive
+    apis = sorted({tc["api_name"] for tc in TEST_CASES})
+
+    print(f"\n  APIs         : {', '.join(apis)}")
+    print(f"  Test cases   : {total}  ({positive} positive, {negative} negative)\n")
 
     result = subprocess.run(
         [sys.executable, "-m", "pytest", "tests/", "-v", "--tb=short", "-s"],
